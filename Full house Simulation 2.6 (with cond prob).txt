@@ -1,0 +1,373 @@
+##################################################################
+################### Full house simulation ###################
+################################################################## 
+
+##################################################################
+check.x.for.3k <- function(x) {	       
+###############################      
+#Function: Checks a group of dice, x, if it contains a 3 of a kind
+#	   Returns the face value of the 3 or 0 if not found
+#Input: x = dice to be checked
+###############################  
+for(i in 1:6) {
+if(sum(x%in%i)>=3)
+	return(i)}
+return(0)
+}
+##################################################################
+
+
+##################################################################
+check.x.for.pair <- function(x) {	
+###############################      
+#Function: Checks a group of dice, x, if it contains a pair
+#	   Returns the face value of the pair or 0 if not found
+#Input: x = dice to be checked
+###############################  
+for(i in 1:6) {
+if(sum(x%in%i)>=2)
+	return(i)}
+return(0)
+}
+##################################################################
+
+
+##################################################################
+check.x.for.2nd.pair <- function(x) {	
+###############################      
+#Function: Checks a group of dice, x, if it contains a 2nd pair
+#	   Returns the face value of the 2nd pair or 0 if not found
+#Input: x = dice to be checked
+############################### 
+counter=0
+for(i in 1:6) {
+if(sum(x%in%i)>=2)
+	counter=counter+1
+if(counter==2)
+	return(i)}
+return(0)
+}
+##################################################################
+
+
+##################################################################
+check.x.to.match.against.pairs <- function(x,pair,pair_two) {
+###############################      
+#Function: Checks if x matches one of two pairs
+#	   Returns the pair matched or 0 if not found
+#Input: x = dice to be checked
+#	pair = first pair to check
+#	pair_two = second pair to check
+############################### 
+
+if(x==pair)
+	return(pair)
+if(x==pair_two)
+	return(pair_two)
+return(0)
+}
+##################################################################
+
+
+##################################################################
+check.x.to.match.the.pair <- function(x,pair,remaining_dice) {
+###############################      
+#Function: Checks if x matches the current pair
+#	   Returns the pair if matched or 0 if not found
+#Input: x = dice to be checked
+#	pair = pair x is matched against
+#	remaining_dice = index to know how many dice are in the x array
+############################### 
+if(remaining_dice==0)
+	return(0)
+for(i in 1:remaining_dice)
+	{
+	if(x[i]==pair)
+		return(pair)
+	}
+return(0)
+}
+##################################################################
+
+
+##################################################################
+full.house.turn	<- function() {
+###############################      
+#Function: Simulates one Yahtzee turn aiming for a full house
+#	   Returns TRUE/FALSE depending on the success of the find
+############################### 
+
+## Variable Set up ##
+pair=0
+pair_two=0
+three_of_kind=0
+remaining_dice=5
+
+
+## Roll 1 ##
+x = trunc(6*runif(5))+1		# Roll five dice
+
+three_of_kind=check.x.for.3k(x)	# Look for three of a kind
+pair=check.x.for.pair(x)	# Look for a pair
+pair_two=check.x.for.2nd.pair(x)
+
+if(pair==three_of_kind)		# Remove any faces which are counted twice
+	pair=0
+if(pair_two==three_of_kind)	# Remove any faces which are counted twice
+	pair_two=0
+
+if((three_of_kind && pair) || (three_of_kind && pair_two))   # Full-house Found
+	return(TRUE)
+
+remaining_dice=5-3*(!sum(three_of_kind%in%0))-2*(!sum(pair%in%0))-2*(!sum(pair_two%in%0))  
+
+## Roll 2 ##
+x = trunc(6*runif(remaining_dice))+1		# Roll remaining dice
+
+if(three_of_kind && !pair && !pair_two)		# 3-1-1 case
+	{
+	pair=check.x.for.pair(x)
+
+	if(pair==three_of_kind)		
+		pair=0
+
+	if(three_of_kind && pair) 
+		return(TRUE)			# Full-house Found
+	}
+if(!three_of_kind && pair && pair_two)		# 2-2-1 case
+	{
+	if(check.x.to.match.against.pairs(x,pair,pair_two))	#And 1 matches a pair  
+		return(TRUE)			# Full-house Found
+	}
+if(!three_of_kind && pair && !pair_two)		# 2-1-1-1 case
+	{
+	three_of_kind=check.x.to.match.the.pair(x,pair,remaining_dice)	# See if can make three of a kind
+	if(three_of_kind)			# Now 3-1-1 case
+		{pair=0
+		
+		pair=check.x.for.pair(x)
+
+		if(pair==three_of_kind)		
+			pair=0
+		if(three_of_kind && pair) 
+			return(TRUE)		# Full-house Found
+		}
+	pair_two=check.x.for.2nd.pair(x)
+	}
+if(!three_of_kind && !pair && !pair_two)	# 1-1-1-1-1 Case
+	{
+	three_of_kind=check.x.for.3k(x)		# Look for three of a kind
+	pair=check.x.for.pair(x)		# Look for a pair
+	pair_two=check.x.for.2nd.pair(x)
+
+	if(pair==three_of_kind)	
+		pair=0
+	if(pair_two==three_of_kind)
+		pair_two=0
+
+	if((three_of_kind && pair) || (three_of_kind && pair_two))   # Full-house Found
+		return(TRUE)
+	}
+
+remaining_dice=5-3*(!sum(three_of_kind%in%0))-2*(!sum(pair%in%0))-2*(!sum(pair_two%in%0)) 
+
+## Roll 3 ##
+x = trunc(6*runif(remaining_dice))+1		# Roll remaining dice
+
+if(three_of_kind && !pair && !pair_two)		# 3-1-1 case
+	{
+	pair=check.x.for.pair(x)
+
+	if(pair==three_of_kind)		
+		pair=0
+
+	if(three_of_kind && pair) 
+		return(TRUE)		# Full-house Found
+	}
+if(!three_of_kind && pair && pair_two)		# 2-2-1 case
+	{
+	if(check.x.to.match.against.pairs(x,pair,pair_two))	#And 1 matches a pair  
+		return(TRUE)			# Full-house Found
+	}	
+if(!three_of_kind && pair && !pair_two)		# 2-1-1-1 case
+	{
+	three_of_kind=check.x.to.match.the.pair(x,pair,remaining_dice)	# See if can make three of a kind
+	if(three_of_kind)			# Now 3-1-1 case
+		{pair=0
+		
+		pair=check.x.for.pair(x)
+
+		if(pair==three_of_kind)		
+			pair=0
+		if(three_of_kind && pair) 
+			return(TRUE)			# Full-house Found
+		}
+	pair_two=check.x.for.2nd.pair(x)
+	}		
+if(!three_of_kind && !pair && !pair_two)	# 1-1-1-1-1 Case
+	{
+	three_of_kind=check.x.for.3k(x)		# Look for three of a kind
+	pair=check.x.for.pair(x)		# Look for a pair
+	pair_two=check.x.for.2nd.pair(x)
+
+	if(pair==three_of_kind)	
+		pair=0
+	if(pair_two==three_of_kind)
+		pair_two=0
+
+	if((three_of_kind && pair) || (three_of_kind && pair_two))   # Full-house Found
+		return(TRUE)
+	}
+
+return(FALSE)					# No 3-2 cases found
+}
+
+##################################################################
+
+
+##################################################################
+full.house <- function(n){	# runs n number of full house rolls and takes the average sum
+###############################
+# Function: Runs n number of "full.house" turns
+#           Returns probability of success
+# Input: n = number of turns
+###############################
+successful_turns=0
+for (i in 1:n) {
+   if(full.house.turn())		#Log number of successes
+	successful_turns=successful_turns+1
+} 
+probability=successful_turns/n
+return(probability)		     	#Return probability of success
+} 
+##################################################################
+
+full.house(1000)
+
+
+
+##################################################################
+cond.prob <- function(n){	# Find conditional probability table from n rolls per row
+###############################
+# Function: Runs n number of "cond.prob.once" turns
+#           Prints conditional probability table
+# Input: n = number of turns
+###############################
+successful_turns=0
+new_stats_00=c(0,0,0,0,0)
+new_stats_02=c(0,0,0,0,0)
+new_stats_22=c(0,0,0,0,0)
+new_stats_03=c(0,0,0,0,0)
+new_stats_23=c(0,0,0,0,0)
+
+
+first_array=c(0,0,2,0,2)
+second_array=c(0,2,2,3,3)
+
+for (j in 1:5)
+{
+first=first_array[j]
+second=second_array[j]
+
+for (i in 1:n) {
+	new_stats=cond.prob.once(first,second)
+	if(new_stats[1]==0 && new_stats[2]==0 && new_stats[3]==0)
+		new_stats_00[j]=new_stats_00[j]+1
+	
+	if(new_stats[1]==1 && new_stats[2]==0 && new_stats[3]==0)
+		new_stats_02[j]=new_stats_02[j]+1
+		
+	if(new_stats[1]==1 && new_stats[2]==1 && new_stats[3]==0)
+		new_stats_22[j]=new_stats_22[j]+1
+
+	if(new_stats[1]==0 && new_stats[2]==0 && new_stats[3]==1)
+		new_stats_03[j]=new_stats_03[j]+1
+	
+	if(new_stats[1]==1 && new_stats[2]==0 && new_stats[3]==1)
+		new_stats_23[j]=new_stats_23[j]+1
+	if(new_stats[1]==0 && new_stats[2]==1 && new_stats[3]==1)
+		new_stats_23[j]=new_stats_23[j]+1
+
+} 
+}
+to_state=c("x00","x02","x22","x03","x23","sums")
+from_state=c("","x00","x02","x22","x03","x23")
+
+probabilities=cbind(new_stats_00/n, new_stats_02/n,new_stats_22/n,new_stats_03/n,new_stats_23/n)
+
+prob_with_sums=cbind(probabilities,new_stats_00/n+new_stats_02/n+new_stats_22/n+new_stats_03/n+new_stats_23/n)
+
+table_top=rbind(to_state,prob_with_sums)
+table_with_both=cbind(from_state,table_top)
+return(table_with_both)		     	#Print conditional probability table
+} 
+##################################################################
+
+
+##################################################################
+cond.prob.once	<- function(first,second) {
+###############################      
+#Function: Simulates one roll aiming for a full house given "X##" where first and second represent ##
+#	   Returns conditional probability 
+# first = first number in notation
+# second = second number in notation
+############################### 
+
+## Variable Set up ##
+pair=0
+pair_two=0
+three_of_kind=0
+new_stats=c(0,0,0)
+
+remaining_dice=5-first-second
+x = trunc(6*runif(remaining_dice))+1		# Roll remaining dice
+
+if(first==0 && second==0)
+	{
+	three_of_kind=check.x.for.3k(x)	# Look for three of a kind
+	pair=check.x.for.pair(x)	# Look for a pair
+	pair_two=check.x.for.2nd.pair(x)
+	}
+
+if(first==0 && second==2)
+	{
+	pair=1
+	three_of_kind=check.x.to.match.the.pair(x,pair,remaining_dice)
+	if(three_of_kind==0)
+		three_of_kind=check.x.for.3k(x)	# Look for three of a kind
+	pair_two=check.x.for.pair(x)
+	}
+if(first==2 && second==2)
+	{
+	pair=1
+	pair_two=2
+	if(check.x.to.match.against.pairs(x,pair,pair_two))
+		return(c(1,0,1))
+	}
+if(first==0 && second==3)
+	{
+	three_of_kind=1
+	pair=check.x.for.pair(x)
+	}
+if(first==2 && second==3)
+	{
+	return(c(1,0,1))
+	}
+
+
+if(pair==three_of_kind)		# Remove any faces which are counted twice
+	pair=0
+if(pair_two==three_of_kind)	# Remove any faces which are counted twice
+	pair_two=0
+
+if(pair)
+	new_stats[1]=1
+if(pair_two)
+	new_stats[2]=1
+if(three_of_kind)
+	new_stats[3]=1
+return(new_stats)
+}
+################################################
+
+cond.prob(100)
